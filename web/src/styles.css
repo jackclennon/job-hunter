@@ -1,0 +1,8 @@
+:root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+body { margin: 0; padding: 0 16px; }
+.login { max-width: 360px; margin: 15vh auto 0; }
+.login form { display: grid; gap: 12px; }
+.login label { display: grid; gap: 4px; }
+.login input { padding: 8px; font: inherit; }
+.login button { padding: 8px; font: inherit; }
+.error { color: #c0392b; margin: 0; }

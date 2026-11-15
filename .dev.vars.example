@@ -1,0 +1,6 @@
+# Copy to .dev.vars for `wrangler dev`. Never commit .dev.vars.
+SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=
+SECRETS_KEY=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
