@@ -19,5 +19,6 @@
   "observability": { "enabled": true }
   // Secrets, set with `wrangler secret put` (never committed):
   //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SECRETS_KEY,
-  //   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+  //   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+  //   ANTHROPIC_API_KEY, REED_API_KEY, ADZUNA_APP_ID, ADZUNA_APP_KEY
 }

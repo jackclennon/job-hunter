@@ -6,8 +6,8 @@ acceptance test before the next one starts.
 
 | Section | Milestones | What it delivers | Status |
 | --- | --- | --- | --- |
-| 1. Foundation | 1 Skeleton, migrations, deployed Worker · 2 Free-plan risk checks | Repo, all tables, policies and functions, Worker serving the React app; proof that cron, a 1 MB Gmail attachment and a Claude call all work on the free plan | **M1 built and tested locally; deploy pending.** M2 not started |
-| 2. Accounts and Settings | 3 Sign-in and token check · 4 Profile, master CV, CV files · 5 Secrets, encryption, Test buttons | Signed-in users, per-user query helper, the Settings page, encrypted keys | Not started |
+| 1. Foundation | 1 Skeleton, migrations, deployed Worker · 2 Free-plan risk checks | Repo, all tables, policies and functions, Worker serving the Svelte app; proof that cron, a 1 MB Gmail attachment and a Claude call all work on the free plan | **M1 deployed by the owner.** M2 not started |
+| 2. Accounts and Settings | 3 Sign-in and token check · 4 Profile, master CV, CV files · 5 Gmail token encryption, owner key checks | Signed-in users, per-user query helper, the Settings page | Not started |
 | 3. Job pipeline | 6 Task queue, enqueue, runner, Reed search · 7 Adzuna, Reed details, de-duplication · 8 Scoring and classification | The daily background run that fills each user's shortlist | Not started |
 | 4. User workflow | 9 Shortlist page · 10 Drafting · 11 Drafts page and hand-off modes | Select, draft, review, copy, mark as applied or sent | Not started |
 | 5. Sending and budget | 12 Gmail connect and send, dry run · 13 Budget cap | Sending from the user's Gmail; spend limits | Not started |
@@ -26,7 +26,7 @@ Passes when: the deployed URL shows the Login page, and `/api/health` reads one 
   revoked from `anon` and `authenticated`, so only the Worker can call them.
 - `worker/src/index.ts`: Hono app under `/api`, `GET /api/health`, JSON 404 and 500 handlers, and a
   `scheduled` handler stub for the two Cron Triggers.
-- `web/`: Vite + React + TypeScript; the Login page, signing in with supabase-js.
+- `web/`: Vite + Svelte 5 + TypeScript; the Login page, signing in with supabase-js.
 
 ### Verified locally
 
@@ -46,6 +46,28 @@ The owner's setup steps (README) and one deploy. The build environment has no Cl
 Supabase account and cannot reach their documentation sites, so the deploy and the live
 `/api/health` check have not been run. Config keys were checked against the JSON schema shipped
 in wrangler 4.162.0 instead of the online docs.
+
+## Spec changes from the owner, 16 November 2026
+
+These override the spec doc wherever they conflict.
+
+**Owner's API keys for everyone.** Users no longer bring their own keys.
+- The Anthropic, Reed and Adzuna keys are Worker secrets: `ANTHROPIC_API_KEY`, `REED_API_KEY`,
+  `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`.
+- `user_secrets` holds only each user's `gmail_refresh_token`
+  (migration `20261116000000_owner_api_keys.sql`).
+- The Settings page loses its API keys section and its Test buttons for Anthropic, Reed and
+  Adzuna. The email Test button stays. Key checks become a part of milestone 5 the owner runs.
+- `setup_complete` needs a master CV, at least one CV file and at least one search term.
+- `monthly_budget_usd` is set by the owner in the Supabase dashboard. Users cannot change it.
+  The Settings page shows it read-only.
+- The daily run searches each source for every user who has finished setup, as before, now with
+  the owner's keys.
+- Milestone 5 becomes: Gmail token encryption (the only stored secret), plus a check that no
+  API response contains a key.
+
+**Svelte instead of React.** The front end is Svelte 5 with Vite and TypeScript, as a
+single-page app, built to static files and served by the Worker as before. No SvelteKit.
 
 ## Decisions from the owner
 

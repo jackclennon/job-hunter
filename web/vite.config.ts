@@ -1,9 +1,9 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
 
 export default defineConfig({
   root: "web",
-  plugins: [react()],
+  plugins: [svelte()],
   build: { outDir: "dist", emptyOutDir: true },
   server: { proxy: { "/api": "http://localhost:8787" } },
 });

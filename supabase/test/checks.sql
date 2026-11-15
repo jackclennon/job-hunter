@@ -24,7 +24,7 @@ select 'status_changed_at updates' as check, status_changed_at > now() - interva
   from jobs where user_id = '00000000-0000-0000-0000-00000000000a';
 
 insert into user_secrets (user_id, name, ciphertext, last4) values
-  ('00000000-0000-0000-0000-00000000000a', 'anthropic_key', 'ct', '1234');
+  ('00000000-0000-0000-0000-00000000000a', 'gmail_refresh_token', 'ct', '1234');
 insert into tasks (user_id, kind, payload) values
   ('00000000-0000-0000-0000-00000000000a', 'search', '{"term":"packer","source":"reed"}'),
   ('00000000-0000-0000-0000-00000000000a', 'search', '{"term":"picker","source":"reed"}'),
@@ -67,3 +67,13 @@ delete from auth.users where id = '00000000-0000-0000-0000-00000000000a';
 select 'delete cascades, B untouched' as check,
   (select count(*) from jobs) = 1 and (select count(*) from tasks) = 0
   and (select count(*) from profiles) = 1 and (select count(*) from user_secrets) = 0 as pass;
+
+-- Owner API keys migration: only gmail_refresh_token may be stored
+do $$ begin
+  insert into user_secrets (user_id, name, ciphertext, last4)
+    values ('00000000-0000-0000-0000-00000000000b', 'anthropic_key', 'ct', '1234');
+  raise exception 'anthropic_key was accepted';
+exception when check_violation then null; end $$;
+insert into user_secrets (user_id, name, ciphertext, last4)
+  values ('00000000-0000-0000-0000-00000000000b', 'gmail_refresh_token', 'ct', 'abcd');
+select 'user_secrets holds only gmail_refresh_token' as check, true as pass;

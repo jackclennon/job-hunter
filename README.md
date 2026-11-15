@@ -2,7 +2,8 @@
 
 Hosted web app for a few invited users: finds jobs daily, lets each user pick the ones
 worth applying to, drafts applications with Claude from their own CV, and sends or hands
-off each one after a confirming click. Cloudflare Worker (Hono) + React (Vite) + Supabase.
+off each one after a confirming click. Cloudflare Worker (Hono) + Svelte (Vite) + Supabase.
+Claude, Reed and Adzuna are called with the owner's keys, shared by every user.
 
 Progress and open questions: [BUILD_PLAN.md](BUILD_PLAN.md).
 
@@ -39,9 +40,27 @@ npx wrangler secret put GOOGLE_CLIENT_ID
 npx wrangler secret put GOOGLE_CLIENT_SECRET
 ```
 
-7. Copy `web/.env.example` to `web/.env.local` and fill in `VITE_SUPABASE_URL` and
-   `VITE_SUPABASE_ANON_KEY`. Never put the service role key there.
+```bash
+npx wrangler secret put ANTHROPIC_API_KEY
+```
+
+```bash
+npx wrangler secret put REED_API_KEY
+```
+
+```bash
+npx wrangler secret put ADZUNA_APP_ID
+```
+
+```bash
+npx wrangler secret put ADZUNA_APP_KEY
+```
+
+7. Fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `web/.env.local` (committed: both are
+   public). Never put the service role key there.
 8. Create each user in the Supabase dashboard with a temporary password.
+9. Set each user's `profiles.monthly_budget_usd` in the Supabase table editor (default $5). Users
+   cannot change it, because their Claude calls are paid with your key.
 
 ## Commands
 
