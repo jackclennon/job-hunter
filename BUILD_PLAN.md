@@ -121,8 +121,8 @@ Data changes this needs, in the milestone 8 migration: `profiles.cv_terms jsonb`
 
 Estimated cost for 6 users: the fit check sends about 1,000 tokens in instead of 4,000–5,000,
 and steps a–c should remove a share of jobs before any call. Scoring falls from about $4–9 to
-about $1–2 a month. Profile extraction is a few cents per CV change. Drafting is unchanged at
-about $5–13, because it still needs the full CV to stay truthful.
+about $1–2 a month. Profile extraction is a few cents per CV change. Drafting no longer uses Claude
+(see below).
 
 Risks: plain regex misses wording that is not in the term list ("despatch" vs "dispatch"),
 so synonyms matter and users should check them; Adzuna gives only a snippet, so hard checks see
@@ -132,6 +132,36 @@ advert, which is why rejections stay visible with a reason.
 Owner's answers, 16 November 2026: a yes/no "full driving licence" is enough; adverts with
 zero matching terms are rejected without Claude; only the driving licence and degree checks
 (plus expiry) are kept.
+
+**No Claude drafting: applications are the user's own template plus the right CV.**
+Replaces the spec's Stage 4, its drafting prompt and the drafting checks. Status: agreed.
+
+- Each user writes one email template in Settings, with a subject and a body. Placeholders:
+  `{job_title}`, `{employer}`, `{full_name}`, `{phone}`. A sensible default is filled in for
+  new users. Unknown placeholders are refused on save.
+- Users upload one CV per field they apply to (the existing CV files: up to 6, each with a
+  label and a "use for" line). The fit check in Stage 2 picks the CV file for each job, and the
+  user can change it before sending.
+- Draft selected fills the template for each ticked job and moves it to `drafted` straight
+  away. It makes no Claude call and needs no budget check.
+- Email jobs: the user reviews and can edit the filled subject, body, recipient and CV, then
+  sends after the confirming click, through Gmail or hand-off mode, exactly as in the spec.
+- Gated jobs: the card shows the chosen CV to download, the saved application answers with Copy
+  buttons, and Open application. No cover letter and no `form_answers`.
+- Regenerate becomes Reset to template. Discard is unchanged.
+- Data changes, in the milestone 10 migration: `profiles.email_subject_template`,
+  `profiles.email_body_template`; `drafts.body` becomes nullable (gated jobs have none);
+  `drafts.form_answers` is dropped; `usage.stage` no longer needs `draft`.
+- Milestone 10 passes when Draft selected creates drafts only for ticked jobs, fills every
+  placeholder, and makes no outbound request.
+
+Claude is now used only for profile extraction and the Stage 2 fit check, so the estimated
+spend for 6 users is about **$1–2 a month** in total. The per-user budget stays as a safety net.
+
+Proposed follow-on, needs the owner's yes: the pasted master CV now feeds only the term
+extraction. Claude could extract terms from each uploaded CV PDF instead (one call per upload,
+about a cent), and the pasted text box would go. Each CV file would then carry its own terms,
+and the fit check would match a job against the terms of every CV file.
 
 **Svelte instead of React.** The front end is Svelte 5 with Vite and TypeScript, as a
 single-page app, built to static files and served by the Worker as before. No SvelteKit.
