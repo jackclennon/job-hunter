@@ -72,8 +72,7 @@ figure), leaving about 280 for the Fetch new jobs button. Migration
 `20261116000100_max_four_search_terms.sql`.
 
 **Stage 2 redesigned: cheap checks first, Claude reads only the relevant paragraphs.**
-Replaces the spec's Stage 2 and its scoring prompt. Status: proposed; the open questions
-below need answers before milestone 8.
+Replaces the spec's Stage 2 and its scoring prompt. Status: agreed with the owner.
 
 *Once per CV: extract a candidate profile.* When the user saves their master CV, the Worker
 makes one Claude call that returns `profiles.cv_terms` (jsonb):
@@ -97,32 +96,28 @@ with stage `profile`. Terms must come from the CV only, like every other fact.
 | --- | --- | --- | --- |
 | a. Duplicate | No | As in the spec (`dedupe_key`) | `filtered_out`, reason `duplicate` |
 | b. Hard checks | No | The checks in the table below | `filtered_out`, reason names the check |
-| c. Keyword match | No | Split the advert into paragraphs (blank lines, bullets, or sentences for an Adzuna snippet). Match every term and synonym from `cv_terms` as a whole-word, case-insensitive regex. Keep the title plus the 3 best-matching paragraphs, capped at 1,500 characters, plus any paragraph containing an email address | Zero matches: see open question 2 |
+| c. Keyword match | No | Split the advert into paragraphs (blank lines, bullets, or sentences for an Adzuna snippet). Match every term and synonym from `cv_terms` as a whole-word, case-insensitive regex. Keep the title plus the 3 best-matching paragraphs, capped at 1,500 characters, plus any paragraph containing an email address | Zero matches: `filtered_out`, reason `no matching terms`, no Claude call |
 | d. Fit check | Yes, Haiku | Claude gets the title, the kept paragraphs, `cv_terms` and the list of CV files, never the full CV or full advert. Returns `score`, `reason`, `cv_file_id`, `application_email` in the spec's JSON shape | Below threshold: `filtered_out` |
 
 The email/gated rule is unchanged: `email` only when the returned address appears verbatim in
 the advert. Addresses are found by regex in step c, so the paragraph holding one always reaches
 Claude.
 
-*Hard checks.* Each one is a requirement signal in the advert plus a fact about the candidate.
-A job is rejected only when the advert says the thing is required: the match and a word such as
-`essential`, `must`, `required`, `need` or `necessary` in the same sentence, and no `desirable`,
-`preferred`, `advantage` or `ideally` there. The title counts as a requirement (a "Delivery
-Driver" needs a licence). Rejected jobs stay visible under Show filtered out, with the reason,
-and can be moved to the shortlist.
+*Hard checks.* Only two, plus expiry. A job is rejected only when the advert says the thing is
+required: the match and a word such as `essential`, `must`, `required`, `need` or `necessary`
+in the same sentence, and no `desirable`, `preferred`, `advantage` or `ideally` there. The
+title counts as a requirement (a "Delivery Driver" needs a licence). Rejected jobs stay visible
+under Show filtered out, with the reason, and can be moved to the shortlist.
 
 | # | Check | Advert pattern (case-insensitive) | Candidate fact |
 | --- | --- | --- | --- |
-| 1 | Driving licence | `driv(ing\|er'?s) licen[cs]e`, `full (uk\|clean) licen[cs]e`, `licen[cs]ed driver`, title matching `\bdriver\b` or `\bcourier\b` | Driving licence answer is "None" or "Provisional" |
-| 2 | Own vehicle | `own (transport\|vehicle\|car)`, `access to a (car\|vehicle)` | New answer: own vehicle, yes/no |
-| 3 | Named licence or certificate | `\bSIA\b`, `\bCSCS\b`, `\b(HGV\|LGV)\b`, `\bC\+E\b`, `\bCPC\b`, `\bFLT\b\|forklift`, `\bIPAF\b`, `\bPASMA\b`, `\bCOSHH\b` (list in config.ts) | Not among `licences_and_certificates` terms or synonyms |
-| 4 | Degree | `degree` with `required\|essential\|must` | No degree-level item in `education` |
-| 5 | Visa sponsorship | `(no\|unable to\|cannot\|not able to) (offer )?(visa )?sponsor` | Right to work answer says sponsorship is needed |
-| 6 | Expired | `expires_at` in the past | — |
+| 1 | Driving licence | `driv(ing\|er'?s) licen[cs]e`, `full (uk\|clean) licen[cs]e`, `licen[cs]ed driver`, title matching `\bdriver\b` or `\bcourier\b` | `profiles.has_full_driving_licence` is false |
+| 2 | Degree | `degree` with `required\|essential\|must` | No degree-level item in `education` |
+| 3 | Expired | `expires_at` in the past | — |
 
 Data changes this needs, in the milestone 8 migration: `profiles.cv_terms jsonb`,
-`profiles.cv_terms_updated_at`, `usage.stage` allows `profile`, and the driving licence answer
-becomes a fixed choice (Full UK, Provisional, None, Other) instead of free text.
+`profiles.cv_terms_updated_at`, `usage.stage` allows `profile`, and
+`profiles.has_full_driving_licence boolean not null default false` (a yes/no in Settings).
 
 Estimated cost for 6 users: the fit check sends about 1,000 tokens in instead of 4,000–5,000,
 and steps a–c should remove a share of jobs before any call. Scoring falls from about $4–9 to
@@ -134,11 +129,9 @@ so synonyms matter and users should check them; Adzuna gives only a snippet, so 
 less there and miss more; requirement detection is per sentence and will sometimes misread an
 advert, which is why rejections stay visible with a reason.
 
-Open questions for the owner:
-1. Make the driving licence answer a fixed choice, and add an "own vehicle" answer?
-2. When an advert matches zero terms, reject it without asking Claude (cheapest, but can miss
-   career-change roles), or still send the title and first paragraph to Claude?
-3. Is the hard-check list above right? Anything to add or drop?
+Owner's answers, 16 November 2026: a yes/no "full driving licence" is enough; adverts with
+zero matching terms are rejected without Claude; only the driving licence and degree checks
+(plus expiry) are kept.
 
 **Svelte instead of React.** The front end is Svelte 5 with Vite and TypeScript, as a
 single-page app, built to static files and served by the Worker as before. No SvelteKit.
