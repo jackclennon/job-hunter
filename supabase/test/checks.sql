@@ -77,3 +77,9 @@ exception when check_violation then null; end $$;
 insert into user_secrets (user_id, name, ciphertext, last4)
   values ('00000000-0000-0000-0000-00000000000b', 'gmail_refresh_token', 'ct', 'abcd');
 select 'user_secrets holds only gmail_refresh_token' as check, true as pass;
+
+do $$ begin
+  update profiles set search_terms = array['a','b','c','d','e'] where user_id = '00000000-0000-0000-0000-00000000000b';
+  raise exception '5 search terms were accepted';
+exception when check_violation then null; end $$;
+select 'at most 4 search terms' as check, true as pass;

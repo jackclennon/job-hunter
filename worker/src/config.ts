@@ -7,6 +7,6 @@ export const PRICES_USD_PER_MILLION_TOKENS = {
 export const TASKS_PER_RUN = 6;
 export const RESULTS_PER_SEARCH = 25;
 export const MAX_JOBS_SCORED_PER_USER_PER_DAY = 50;
-export const MAX_SEARCH_TERMS = 10;
+export const MAX_SEARCH_TERMS = 4; // 6 users x 4 terms x 30 days = 720 Adzuna calls a month, under the ~1,000 free allowance
 export const MAX_CV_FILES = 6;
 export const MAX_CV_FILE_BYTES = 1_000_000;

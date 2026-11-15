@@ -66,6 +66,11 @@ These override the spec doc wherever they conflict.
 - Milestone 5 becomes: Gmail token encryption (the only stored secret), plus a check that no
   API response contains a key.
 
+**At most 4 search terms per user** (was 10), sized for up to 6 users sharing the owner's
+Adzuna key: 6 × 4 × 30 = 720 calls a month, under the ~1,000 free allowance (a third-party
+figure), leaving about 280 for the Fetch new jobs button. Migration
+`20261116000100_max_four_search_terms.sql`.
+
 **Svelte instead of React.** The front end is Svelte 5 with Vite and TypeScript, as a
 single-page app, built to static files and served by the Worker as before. No SvelteKit.
 
