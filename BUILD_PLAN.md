@@ -158,10 +158,26 @@ Replaces the spec's Stage 4, its drafting prompt and the drafting checks. Status
 Claude is now used only for profile extraction and the Stage 2 fit check, so the estimated
 spend for 6 users is about **$1–2 a month** in total. The per-user budget stays as a safety net.
 
-Proposed follow-on, needs the owner's yes: the pasted master CV now feeds only the term
-extraction. Claude could extract terms from each uploaded CV PDF instead (one call per upload,
-about a cent), and the pasted text box would go. Each CV file would then carry its own terms,
-and the fit check would match a job against the terms of every CV file.
+**Terms come from each uploaded CV PDF; the pasted master CV is dropped.** Status: agreed.
+This updates the Stage 2 profile extraction above.
+
+- `profiles.master_cv` is dropped. Each CV file carries its own terms in `cv_files.terms`
+  (jsonb, same shape as `cv_terms` above) and `cv_files.terms_extracted_at`;
+  `profiles.cv_terms` is not needed.
+- On upload, or when a file is replaced, the Worker makes one Claude call that reads the PDF and
+  returns its terms. The Worker passes Claude a short-lived Supabase signed URL for the file
+  rather than base64-encoding it, so a 1 MB PDF costs the Worker no CPU. Logged in `usage` with
+  stage `profile`. About a cent per upload.
+- Settings shows each CV file's terms for the user to correct. Edits are saved over the
+  extracted list.
+- Keyword match (step c) runs each CV file's terms against the advert. The best-matching file
+  is the one passed to the fit check, along with its paragraphs. Zero matches across all files
+  means `filtered_out`. The fit check can still choose a different file from the list.
+- The degree check looks at the education terms of every CV file.
+- `setup_complete` needs at least one CV file with extracted terms and at least one search term.
+- The only facts about a user now come from their CV files and their application answers.
+- Milestone 2 gains a fourth risk check: Claude reads a 1 MB PDF from a signed URL.
+- Milestone 4 includes extraction on upload; its test adds "terms appear for an uploaded CV".
 
 **Svelte instead of React.** The front end is Svelte 5 with Vite and TypeScript, as a
 single-page app, built to static files and served by the Worker as before. No SvelteKit.
